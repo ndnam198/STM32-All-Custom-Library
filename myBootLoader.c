@@ -47,6 +47,6 @@ int8_t getSector(uint32_t flash_address)
         return currentSector;
     else
     {
-        return -1
+        return -1;
     }
 }
