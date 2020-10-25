@@ -26,33 +26,14 @@ char ucGeneralString[REDUNDANT_BUFFER_SIZE];
 #define isString(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
 #define PRINTF(str) print(str)
 #define PRINT_VAR(var) printVar(var)
-
-#define print(str)                                          \
-    do                                                      \
-    {                                                       \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
-        sprintf(ucGeneralString, "%s", (char *)str);        \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
+#define NEWLINE(nb_of_new_line)                     \
+    do                                              \
+    {                                               \
+        for (size_t i = 0; i < nb_of_new_line; i++) \
+        {                                           \
+            newline;                                \
+        }                                           \
     } while (0)
-
-#define GET_VAR_ONLY(var)                                   \
-    do                                                      \
-    {                                                       \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
-        sprintf(ucGeneralString, " %lu ", var);             \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
-    } while (0)
-
-#define printVar(var)                                             \
-    do                                                            \
-    {                                                             \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);        \
-        sprintf(ucGeneralString, "Value of " #var " = %lu", var); \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);       \
-        print("\r\n");                                            \
-    } while (0)
-
-#define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");
 
 /* GENERAL-DEFINE-END */
 
@@ -70,6 +51,8 @@ void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
 #define DEBUG_USART USART2
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #endif
+
+uint32_t ucRandomNumber(uint32_t min, uint32_t max);
 
 #define toggleLed1 HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 #define toggleLed2 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
@@ -111,4 +94,32 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
     } while (0)
 #define offBuzzer HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
 
+#define print(str)                                          \
+    do                                                      \
+    {                                                       \
+        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
+        sprintf(ucGeneralString, "%s", (char *)str);        \
+        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
+    } while (0)
+
+#define GET_VAR_ONLY(var)                                   \
+    do                                                      \
+    {                                                       \
+        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
+        sprintf(ucGeneralString, " %lu ", var);             \
+        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
+    } while (0)
+
+#define printVar(var)                                             \
+    do                                                            \
+    {                                                             \
+        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);        \
+        sprintf(ucGeneralString, "Value of " #var " = %lu", var); \
+        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);       \
+        print("\r\n");                                            \
+    } while (0)
+
+#define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");
+
+#define RAND_U32(min, max) (ucRandomNumber(min, max))
 #endif /* __MYLIB_H */
