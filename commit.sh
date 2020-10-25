@@ -1,4 +1,7 @@
 #!/bin/sh
+git status
+timestamp=$(date +"%D %T")
+message=$1
 git add -A;
-git commit -m "$1";
+git commit -m "[$timestamp]: $message"
 git push https://github.com/ndnam198/STM32-All-Custom-Library.git master
