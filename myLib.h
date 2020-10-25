@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include "main.h"
 
-
 /* GENERAL-DEFINE-BEGIN */
 char ucGeneralString[100];
 #define BKFET_BOARD
@@ -29,6 +28,13 @@ char ucGeneralString[100];
     do                                                      \
     {                                                       \
         sprintf(ucGeneralString, "%s", (char *)str);        \
+        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
+    } while (0)
+
+#define GET_VAR(var)                                        \
+    do                                                      \
+    {                                                       \
+        sprintf(ucGeneralString, " %lu ", var);             \
         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
     } while (0)
 
@@ -59,9 +65,6 @@ void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #endif
 
-
-
-#if defined(configHAL_UART)
 #define toggleLed1 HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 #define toggleLed2 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
 #define toggleLed3 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_11);
@@ -101,5 +104,5 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
         offLed4;  \
     } while (0)
 #define offBuzzer HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
-#endif /* configHAL_UART */
+
 #endif /* __MYLIB_H */
