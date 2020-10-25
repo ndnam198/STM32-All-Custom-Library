@@ -1,6 +1,6 @@
 #include "myFlash.h"
 
-Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uint32_t *data, uint32_t data_length);
+Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uint32_t *data, uint32_t data_length)
 {
     HAL_StatusTypeDef status = HAL_ERROR;
     Flash_Status_t flash_status = FLASH_ERROR;
@@ -24,14 +24,14 @@ Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uin
     }
 
     /* Start program flash with given data pointer */
-    for (data_length; data_length > 0; --data_length)
+    for(; data_length > 0; --data_length)
     {
-        status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, start_address, *data[index]);
+        status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, start_address, data[index]);
 #if defined(PRINT_DEBUG) /* PRINT_DEBUG */
-        PRINTF("Programing data at");
+        PRINTF("Programing FLASH at address");
         GET_VAR(start_address);
         PRINTF("with data");
-        GET_VAR(*data[index]);
+        GET_VAR(data[index]);
 #endif /* !PRINT_DEBUG */
         if (status != HAL_OK)
         {
@@ -45,7 +45,7 @@ Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uin
     return FLASH_SUCCESS;
 }
 
-uint32_t Flash_ReadAddress(uint32_t flash_address);
+uint32_t Flash_ReadAddress(uint32_t flash_address)
 {
     return *(volatile uint32_t *)(flash_address);
 }
