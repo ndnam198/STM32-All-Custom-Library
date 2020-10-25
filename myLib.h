@@ -19,21 +19,26 @@
 #include "main.h"
 
 /* GENERAL-DEFINE-BEGIN */
-char ucGeneralString[100];
+#define REDUNDANT_BUFFER_SIZE (100U)
+char ucGeneralString[REDUNDANT_BUFFER_SIZE];
+
 #define BKFET_BOARD
 #define isString(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
 #define PRINTF(str) print(str)
-#define configLL_UART
+#define PRINT_VAR(var) printVar(var)
+
 #define print(str)                                          \
     do                                                      \
     {                                                       \
+        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
         sprintf(ucGeneralString, "%s", (char *)str);        \
         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
     } while (0)
 
-#define GET_VAR(var)                                        \
+#define GET_VAR_ONLY(var)                                   \
     do                                                      \
     {                                                       \
+        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
         sprintf(ucGeneralString, " %lu ", var);             \
         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
     } while (0)
@@ -41,6 +46,7 @@ char ucGeneralString[100];
 #define printVar(var)                                             \
     do                                                            \
     {                                                             \
+        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);        \
         sprintf(ucGeneralString, "Value of " #var " = %lu", var); \
         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);       \
         print("\r\n");                                            \
