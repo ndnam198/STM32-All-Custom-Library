@@ -19,13 +19,12 @@
 #include "main.h"
 
 /* GENERAL-DEFINE-BEGIN */
-#define REDUNDANT_BUFFER_SIZE (100U)
-char ucGeneralString[REDUNDANT_BUFFER_SIZE];
+#define VARIABLE_BUFFER_SIZE (10U)
+#define STRING_BUFFER_SIZE (100U)
+char ucGeneralString[VARIABLE_BUFFER_SIZE];
 
 #define BKFET_BOARD
 #define isString(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
-#define PRINTF(str) print(str)
-#define PRINT_VAR(var) printVar(var)
 #define NEWLINE(nb_of_new_line)                     \
     do                                              \
     {                                               \
@@ -94,29 +93,20 @@ uint32_t ucRandomNumber(uint32_t min, uint32_t max);
     } while (0)
 #define offBuzzer HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
 
-#define print(str)                                          \
-    do                                                      \
-    {                                                       \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
-        sprintf(ucGeneralString, "%s", (char *)str);        \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
+#define PRINTF(str)                             \
+    do                                          \
+    {                                           \
+        vUARTSend(DEBUG_USART, (uint8_t *)str); \
     } while (0)
 
-#define GET_VAR_ONLY(var)                                   \
+#define PRINT_VAR(var)                                      \
     do                                                      \
     {                                                       \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);  \
-        sprintf(ucGeneralString, " %lu ", var);             \
+        vUARTSend(DEBUG_USART, (uint8_t *)#var);            \
+        vUARTSend(DEBUG_USART, (uint8_t *)" = ");           \
+        itoa(var, ucGeneralString, 10);                     \
         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
-    } while (0)
-
-#define printVar(var)                                             \
-    do                                                            \
-    {                                                             \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);        \
-        sprintf(ucGeneralString, "Value of " #var " = %lu", var); \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);       \
-        print("\r\n");                                            \
+        newline;                                            \
     } while (0)
 
 #define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");

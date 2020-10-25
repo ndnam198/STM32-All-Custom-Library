@@ -3,7 +3,7 @@
 #if defined(configHAL_UART)
 void vUARTSend(UART_HandleTypeDef huart, uint8_t *String)
 {
-	HAL_UART_Transmit(&huart, (uint8_t *)String, strlen((char *)String), HAL_MAX_DELAY);
+	HAL_UART_Transmit(&huart, (uint8_t *)String, strlen((char *)String), 100);
 }
 #endif /* configHAL_UART */
 #if defined(configLL_UART)

@@ -19,26 +19,55 @@
 
 #include "cmsis_os.h"
 #include "task.h"
+#include "timers.h"
+
 #include "main.h"
 #include "myLib.h"
 
-extern char ucGeneralString[100];
+extern char ucGeneralString[];
 
-#define PRINT_IN_TASK(str)                                                       \
-    do                                                                           \
-    {                                                                            \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);                       \
-        sprintf(ucGeneralString, "[%s] - %s", pcTaskGetName(NULL), (char *)str); \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);                      \
+#define PRINT_IN_TASK(str)                                      \
+    do                                                          \
+    {                                                           \
+        vUARTSend(DEBUG_USART, (uint8_t *)"[");                 \
+        vUARTSend(DEBUG_USART, (uint8_t *)pcTaskGetName(NULL)); \
+        vUARTSend(DEBUG_USART, (uint8_t *)"] - ");              \
+        vUARTSend(DEBUG_USART, (uint8_t *)str);                 \
     } while (0)
-;
 
-#define PRINT_VAR_IN_TASK(var)                                                                \
-    do                                                                                        \
-    {                                                                                         \
-        memset(ucGeneralString, 0, REDUNDANT_BUFFER_SIZE);                                    \
-        sprintf(ucGeneralString, "[%s] - Value of " #var " = %lu", pcTaskGetName(NULL), var); \
-        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);                                   \
-        newline;                                                                              \
-    } while (0);
+#define PRINT_VAR_IN_TASK(var)                                  \
+    do                                                          \
+    {                                                           \
+        vUARTSend(DEBUG_USART, (uint8_t *)"[");                 \
+        vUARTSend(DEBUG_USART, (uint8_t *)pcTaskGetName(NULL)); \
+        vUARTSend(DEBUG_USART, (uint8_t *)"] - ");              \
+        vUARTSend(DEBUG_USART, (uint8_t *)#var);                \
+        vUARTSend(DEBUG_USART, (uint8_t *)" = ");               \
+        itoa(var, ucGeneralString, 10);                         \
+        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);     \
+        newline;                                                \
+    } while (0)
+
+// #define PRINT_IN_SWTIMER(timer_id, str)                                      \
+//     do                                                                       \
+//     {                                                                        \
+//         vUARTSend(DEBUG_USART, (uint8_t *)"[");                              \
+//         vUARTSend(DEBUG_USART, (uint8_t *)osTimerGetName((void *)timer_id)); \
+//         vUARTSend(DEBUG_USART, (uint8_t *)"] - ");                           \
+//         vUARTSend(DEBUG_USART, (uint8_t *)str);                              \
+//     } while (0)
+
+// #define PRINT_VAR_INSWTIMER(timer_id, var)                                   \
+//     do                                                                       \
+//     {                                                                        \
+//         vUARTSend(DEBUG_USART, (uint8_t *)"[");                              \
+//         vUARTSend(DEBUG_USART, (uint8_t *)osTimerGetName((void *)timer_id)); \
+//         vUARTSend(DEBUG_USART, (uint8_t *)"] - ");                           \
+//         vUARTSend(DEBUG_USART, (uint8_t *)#var);                             \
+//         vUARTSend(DEBUG_USART, (uint8_t *)" = ");                            \
+//         itoa(var, ucGeneralString, 10);                                      \
+//         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);                  \
+//         newline;                                                             \
+//     } while (0)
+
 #endif /* !__MY_RTOS_ADDONS */
