@@ -15,7 +15,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "main.h"
+
 
 /* GENERAL-DEFINE-BEGIN */
 char ucGeneralString[100];
@@ -42,6 +44,24 @@ char ucGeneralString[100];
 
 /* GENERAL-DEFINE-END */
 
+/**
+ * @brief Choose whether to use LL or HAL library for UART -----(OPTIONAL)
+ *
+ */
+//#define configHAL_UART
+
+#if defined(configHAL_UART) /* configHAL_UART */
+#define DEBUG_USART huart2
+void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
+
+#elif defined(configLL_UART) /* configLL_UART */
+#define DEBUG_USART USART2
+void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
+#endif
+
+
+
+#if defined(configHAL_UART)
 #define toggleLed1 HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 #define toggleLed2 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
 #define toggleLed3 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_11);
@@ -81,21 +101,5 @@ char ucGeneralString[100];
         offLed4;  \
     } while (0)
 #define offBuzzer HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
-
-
-/**
- * @brief Choose whether to use LL or HAL library for UART -----(OPTIONAL)
- * 
- */
-//#define configHAL_UART
-
-#if defined(configHAL_UART) /* configHAL_UART */
-#define DEBUG_USART huart2
-void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
-
-#elif defined(configLL_UART) /* configLL_UART */
-#define DEBUG_USART USART2
-void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
-#endif
-
+#endif /* configHAL_UART */
 #endif /* __MYLIB_H */

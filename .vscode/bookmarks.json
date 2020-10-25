@@ -1,0 +1,22 @@
+[
+	{
+		"path": "$ROOTPATH$\\myBootLoader.c",
+		"bookmarks": [
+			{
+				"line": 2,
+				"column": 32,
+				"label": "free resource"
+			},
+			{
+				"line": 7,
+				"column": 30,
+				"label": "jump to app"
+			},
+			{
+				"line": 30,
+				"column": 33,
+				"label": "check bootloader execute"
+			}
+		]
+	}
+]
