@@ -48,26 +48,26 @@ extern char ucGeneralString[];
         newline;                                                \
     } while (0)
 
-// #define PRINT_IN_SWTIMER(timer_id, str)                                      \
-//     do                                                                       \
-//     {                                                                        \
-//         vUARTSend(DEBUG_USART, (uint8_t *)"[");                              \
-//         vUARTSend(DEBUG_USART, (uint8_t *)osTimerGetName((void *)timer_id)); \
-//         vUARTSend(DEBUG_USART, (uint8_t *)"] - ");                           \
-//         vUARTSend(DEBUG_USART, (uint8_t *)str);                              \
-//     } while (0)
+/* #define PRINT_IN_SWTIMER(timer_id, str)                                      \
+    do                                                                       \
+    {                                                                        \
+        vUARTSend(DEBUG_USART, (uint8_t *)"[");                              \
+        vUARTSend(DEBUG_USART, (uint8_t *)osTimerGetName((void *)timer_id)); \
+        vUARTSend(DEBUG_USART, (uint8_t *)"] - ");                           \
+        vUARTSend(DEBUG_USART, (uint8_t *)str);                              \
+    } while (0)
 
-// #define PRINT_VAR_INSWTIMER(timer_id, var)                                   \
-//     do                                                                       \
-//     {                                                                        \
-//         vUARTSend(DEBUG_USART, (uint8_t *)"[");                              \
-//         vUARTSend(DEBUG_USART, (uint8_t *)osTimerGetName((void *)timer_id)); \
-//         vUARTSend(DEBUG_USART, (uint8_t *)"] - ");                           \
-//         vUARTSend(DEBUG_USART, (uint8_t *)#var);                             \
-//         vUARTSend(DEBUG_USART, (uint8_t *)" = ");                            \
-//         itoa(var, ucGeneralString, 10);                                      \
-//         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);                  \
-//         newline;                                                             \
-//     } while (0)
+#define PRINT_VAR_INSWTIMER(timer_id, var)                                   \
+    do                                                                       \
+    {                                                                        \
+        vUARTSend(DEBUG_USART, (uint8_t *)"[");                              \
+        vUARTSend(DEBUG_USART, (uint8_t *)osTimerGetName((void *)timer_id)); \
+        vUARTSend(DEBUG_USART, (uint8_t *)"] - ");                           \
+        vUARTSend(DEBUG_USART, (uint8_t *)#var);                             \
+        vUARTSend(DEBUG_USART, (uint8_t *)" = ");                            \
+        itoa(var, ucGeneralString, 10);                                      \
+        vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString);                  \
+        newline;                                                             \
+    } while (0) */
 
 #endif /* !__MY_RTOS_ADDONS */

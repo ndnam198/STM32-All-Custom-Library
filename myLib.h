@@ -24,7 +24,10 @@
 char ucGeneralString[VARIABLE_BUFFER_SIZE];
 
 #define BKFET_BOARD
-#define isString(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
+#define IS_MY_STRING(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
+#define NUMBER_OF_ELEMENT(array) (sizeof(array) / sizeof(array[0]))
+#define RAND_U32(min, max) (ucRandomNumber(min, max))
+
 #define NEWLINE(nb_of_new_line)                     \
     do                                              \
     {                                               \
@@ -111,5 +114,5 @@ uint32_t ucRandomNumber(uint32_t min, uint32_t max);
 
 #define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");
 
-#define RAND_U32(min, max) (ucRandomNumber(min, max))
+
 #endif /* __MYLIB_H */
