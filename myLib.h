@@ -18,17 +18,58 @@
 #include <stdlib.h>
 #include "main.h"
 
-/* GENERAL-DEFINE-BEGIN */
+/****************************************** OPTIONAL CONFIGURATION - BEGIN */
+#define configHAL_UART
+//#define USE_DMA_TX
+//#define configLL_UART
+#define BKFET_BOARD
+/****************************************** OPTIONAL CONFIGURATION - END */
+
+/****************************************** GENERAL-DEFINE-BEGIN */
+
 #define VARIABLE_BUFFER_SIZE (10U)
 #define STRING_BUFFER_SIZE (100U)
+
+/* String used to store temporary string data */
 char ucGeneralString[VARIABLE_BUFFER_SIZE];
 
-#define BKFET_BOARD
+/* Compare a string to a destined string, return 1 if equal, else return 0 */
 #define IS_MY_STRING(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
+
+/* Return the number of elements in an array */
 #define NUMBER_OF_ELEMENT(array) (sizeof(array) / sizeof(array[0]))
+
+/* Return a random number between min and max value */
 #define RAND_U32(min, max) (ucRandomNumber(min, max))
 
-#define NEWLINE(nb_of_new_line)                     \
+/* Reset cause enumeration */
+typedef enum
+{
+    eRESET_CAUSE_UNKNOWN = 0,
+    eRESET_CAUSE_LOW_POWER_RESET,
+    eRESET_CAUSE_WINDOW_WATCHDOG_RESET,
+    eRESET_CAUSE_INDEPENDENT_WATCHDOG_RESET,
+    eRESET_CAUSE_SOFTWARE_RESET,
+    eRESET_CAUSE_POWER_ON_POWER_DOWN_RESET,
+    eRESET_CAUSE_EXTERNAL_RESET_PIN_RESET,
+    eRESET_CAUSE_BROWNOUT_RESET,
+} reset_cause_t;
+
+/* Check reset flags in RCC_CSR registers to clarify reset cause */
+reset_cause_t resetCauseGet(void);
+
+/* Get reset cause name in string */
+const char *resetCauseGetName(reset_cause_t reset_cause);
+
+/* Create a random number in range of [min,max] */
+uint32_t ucRandomNumber(uint32_t min, uint32_t max);
+
+/****************************************** GENERAL-DEFINE-END */
+
+/****************************************** BKFET_BOARD DEFINE - BEGIN */
+
+/* Print out a desirable number of new line "\r\n" to debug terminal */
+#define PRINT_NEWLINE(nb_of_new_line)               \
     do                                              \
     {                                               \
         for (size_t i = 0; i < nb_of_new_line; i++) \
@@ -37,24 +78,17 @@ char ucGeneralString[VARIABLE_BUFFER_SIZE];
         }                                           \
     } while (0)
 
-/* GENERAL-DEFINE-END */
-
-/**
- * @brief Choose whether to use LL or HAL library for UART -----(OPTIONAL)
- *
- */
-//#define configHAL_UART
+/* Return a random number between min and max value */
 
 #if defined(configHAL_UART) /* configHAL_UART */
 #define DEBUG_USART huart2
+/* Print out a string to USART */
 void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
 
 #elif defined(configLL_UART) /* configLL_UART */
 #define DEBUG_USART USART2
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #endif
-
-uint32_t ucRandomNumber(uint32_t min, uint32_t max);
 
 #define toggleLed1 HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 #define toggleLed2 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_12);
@@ -114,5 +148,6 @@ uint32_t ucRandomNumber(uint32_t min, uint32_t max);
 
 #define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");
 
+/****************************************** BKFET_BOARD DEFINE - END */
 
 #endif /* __MYLIB_H */

@@ -1,4 +1,7 @@
-#include "myLib.h"
+#include "myDebug.h"
+
+
+
 
 #if defined(configHAL_UART)
 void vUARTSend(UART_HandleTypeDef huart, uint8_t *String)
@@ -32,11 +35,6 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String)
 	}
 }
 #endif /* configLL_UART */
-
-uint32_t ucRandomNumber(uint32_t min, uint32_t max)
-{
-	return (min + rand() % (max + 1 - min));
-}
 
 reset_cause_t resetCauseGet(void)
 {
