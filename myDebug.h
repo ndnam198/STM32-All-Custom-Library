@@ -1,14 +1,14 @@
 /**
- * @file myDebug.h
+ * @file myDebug.h - This is the succeeding version of myLib.h
  * @author Nam Nguyen (ndnam198@gmail.com)
  * @brief This lib is used only for debugging purpose via USART 
  * @version 0.1
- * @date 2020-09-18
+ * @date 2020-11-02
  * 
  * @copyright Copyright (c) 2020
  * 
  */
-#ifndef __MY_DEBUG_H
+#ifndef __MY_DEBUG_H /* __MY_DEBUG_H */
 #define __MY_DEBUG_H
 
 #include <stdio.h>
@@ -17,39 +17,66 @@
 #include <stdlib.h>
 #include "main.h"
 
-/****************************************** OPTIONAL CONFIGURATION - BEGIN */
+/**
+ * @brief Optional configuration
+ * 
+ */
 #define configHAL_UART
 //#define USE_DMA_TX
 //#define configLL_UART
-/****************************************** OPTIONAL CONFIGURATION - END */
 
-/****************************************** GENERAL-DEFINE-BEGIN */
 
-#define VARIABLE_BUFFER_SIZE (10U)
-#define STRING_BUFFER_SIZE (100U)
+/********************************************************************************************************/
 
-/* String used to store temporary string data */
-char ucGeneralString[VARIABLE_BUFFER_SIZE];
-
+/**
+ * @brief Reset Cause
+ * 
+ */
 /* Reset cause enumeration */
-typedef enum
+typedef enum reset_cause
 {
     eRESET_CAUSE_UNKNOWN = 0,
-    eRESET_CAUSE_LOW_POWER_RESET,
-    eRESET_CAUSE_WINDOW_WATCHDOG_RESET,
-    eRESET_CAUSE_INDEPENDENT_WATCHDOG_RESET,
-    eRESET_CAUSE_SOFTWARE_RESET,
-    eRESET_CAUSE_POWER_ON_POWER_DOWN_RESET,
-    eRESET_CAUSE_EXTERNAL_RESET_PIN_RESET,
-    eRESET_CAUSE_BROWNOUT_RESET,
-} reset_cause_t;
+    eRESET_CAUSE_LOW_POWER_RESET,                   /*  */
+    eRESET_CAUSE_WINDOW_WATCHDOG_RESET,             /*  */
+    eRESET_CAUSE_INDEPENDENT_WATCHDOG_RESET,        /* IWDG Timeout */
+    eRESET_CAUSE_SOFTWARE_RESET,                    /* Reset caused by NVIC_SystemReset() */
+    eRESET_CAUSE_POWER_ON_POWER_DOWN_RESET,         /*  */
+    eRESET_CAUSE_EXTERNAL_RESET_PIN_RESET,          /* Low signal on NRST pin | Reset pin pushed */
+    eRESET_CAUSE_BROWNOUT_RESET,                    /*  */
+} reset_cause_t;    
 
 /* Check reset flags in RCC_CSR registers to clarify reset cause */
 reset_cause_t resetCauseGet(void);
 
 /* Get reset cause name in string */
 const char *resetCauseGetName(reset_cause_t reset_cause);
+/********************************************************************************************************/
 
+
+/**
+ * @brief IWDG 
+ * 
+ */
+#define PRESCALER_128_UPPER_LIMIT   (13107u)
+#define PRESCALER_256_UPPER_LIMIT   (26214u)
+#define IWDG_RESOLUTION (4096u)
+
+IWDG_HandleTypeDef _hiwdg;
+
+/********************************************************************************************************/
+/* Init Independant watchdog timer */
+void vIWDG_Init(float millis);
+
+/**
+ * @brief Print debugging log via USART
+ * 
+ */
+/* String used to store temporary string data */
+
+#define VARIABLE_BUFFER_SIZE (10U)
+#define STRING_BUFFER_SIZE (100U)
+
+char ucGeneralString[VARIABLE_BUFFER_SIZE];
 
 #if defined(configHAL_UART) /* configHAL_UART */
 #define DEBUG_USART huart2
@@ -88,7 +115,6 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
     } while (0)
 
 #define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");
+/********************************************************************************************************/
 
-/****************************************** GENERAL-DEFINE-END */
-
-#endif /* __MYLIB_H */
+#endif /* !__MY_DEBUG_H */

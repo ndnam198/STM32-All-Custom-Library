@@ -1,19 +1,16 @@
 #include "myDebug.h"
 
-
-
-
-#if defined(configHAL_UART)
+#if defined(configHAL_UART) /* configHAL_UART */
 void vUARTSend(UART_HandleTypeDef huart, uint8_t *String)
 {
-#if defined(USE_DMA_TX)
+#if defined(USE_DMA_TX) /* USE_DMA_TX */
 	HAL_UART_Transmit_DMA(&huart, (uint8_t *)String, strlen((char *)String));
 #else
 	HAL_UART_Transmit(&huart, (uint8_t *)String, strlen((char *)String), 100);
 #endif /* !USE_DMA_TX */
 }
-#endif /* configHAL_UART */
-#if defined(configLL_UART)
+#endif /* !configHAL_UART */
+#if defined(configLL_UART) /* configLL_UART */
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String)
 {
 	uint32_t ulStringLen = 0;
@@ -34,7 +31,7 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String)
 		}
 	}
 }
-#endif /* configLL_UART */
+#endif /* !configLL_UART */
 
 reset_cause_t resetCauseGet(void)
 {
@@ -112,6 +109,40 @@ const char *resetCauseGetName(reset_cause_t reset_cause)
 		reset_cause_name = "BROWNOUT_RESET (BOR)";
 		break;
 	}
-
 	return reset_cause_name;
+}
+
+void vIWDG_Init(float millis)
+{
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+	float iwdg_timeout_millis = millis;
+
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI;
+	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	else
+	{
+	}
+
+	/* Select INDEPENDENT_WATCHDOG */
+	_hiwdg.Instance = IWDG;
+	if (iwdg_timeout_millis < 5.0)
+	{
+		/* Use prescaler LSI/128 */
+		_hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
+		_hiwdg.Init.Reload = (int)(IWDG_RESOLUTION * (iwdg_timeout_millis / PRESCALER_128_UPPER_LIMIT));
+	}
+	else
+	{
+		/* Use prescaler LSI/256 */
+		_hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
+		_hiwdg.Init.Reload = (int)(IWDG_RESOLUTION * (iwdg_timeout_millis / PRESCALER_256_UPPER_LIMIT));
+	}
+	if (HAL_IWDG_Init(&_hiwdg) != HAL_OK)
+	{
+		Error_Handler();
+	}
 }
