@@ -16,15 +16,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "main.h"
+#include "retarget.h"
 
 /**
  * @brief Optional configuration
  * 
  */
 #define configHAL_UART
+#define USE_RETARGET_PRINTF
 //#define USE_DMA_TX
 //#define configLL_UART
-
+#define PRINT_DEBUG /* Enable print debug information */
 
 /********************************************************************************************************/
 
@@ -51,6 +53,16 @@ reset_cause_t resetCauseGet(void);
 /* Get reset cause name in string */
 const char *resetCauseGetName(reset_cause_t reset_cause);
 /********************************************************************************************************/
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @param  file: The file name as string.
+ * @param  line: The line in file as a number.
+ * @retval None
+ */
+void _Error_Handler(char *file, int line);
+
+
+/********************************************************************************************************/
 
 
 /**
@@ -59,13 +71,12 @@ const char *resetCauseGetName(reset_cause_t reset_cause);
  */
 #define PRESCALER_128_UPPER_LIMIT   (13107u)
 #define PRESCALER_256_UPPER_LIMIT   (26214u)
-#define IWDG_RESOLUTION (4096u)
+#define IWDG_RESOLUTION             (4096u)
 
-IWDG_HandleTypeDef _hiwdg;
 
 /********************************************************************************************************/
 /* Init Independant watchdog timer */
-void vIWDG_Init(float millis);
+void vIWDG_Init(IWDG_HandleTypeDef _hiwdg, float millis);
 
 /**
  * @brief Print debugging log via USART
@@ -74,11 +85,12 @@ void vIWDG_Init(float millis);
 /* String used to store temporary string data */
 
 #define VARIABLE_BUFFER_SIZE (10U)
-#define STRING_BUFFER_SIZE (100U)
+#define STRING_BUFFER_SIZE   (100U)
 
 char ucGeneralString[VARIABLE_BUFFER_SIZE];
 
 #if defined(configHAL_UART) /* configHAL_UART */
+extern UART_HandleTypeDef huart2;
 #define DEBUG_USART huart2
 /* Print out a string to USART */
 void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
@@ -88,12 +100,13 @@ void vUARTSend(UART_HandleTypeDef huart, uint8_t *String);
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #endif
 
-#define PRINTF(str)                             \
-    do                                          \
-    {                                           \
-        vUARTSend(DEBUG_USART, (uint8_t *)str); \
-    } while (0)
+#define __RETARGET_INIT (RetargetInit(&DEBUG_USART))
 
+#if (defined(USE_RETARGET_PRINTF)) /* USE_RETARGET_PRINTF */
+#define PRINTF               (printf)
+#define PRINT_VAR(var)       (printf(#var " = %ld\r\n", var))
+#elif                              /* !USE_RETARGET_PRINTF */
+#define PRINTF(str)          (vUARTSend(DEBUG_USART, (uint8_t *)str))
 #define PRINT_VAR(var)                                      \
     do                                                      \
     {                                                       \
@@ -103,6 +116,7 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
         vUARTSend(DEBUG_USART, (uint8_t *)ucGeneralString); \
         newline;                                            \
     } while (0)
+#endif /* !USE_RETARGET_PRINTF */
 
 /* Print out a desirable number of new line "\r\n" to debug terminal */
 #define PRINT_NEWLINE(nb_of_new_line)               \
@@ -113,7 +127,6 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
             newline;                                \
         }                                           \
     } while (0)
-
 #define newline vUARTSend(DEBUG_USART, (uint8_t *)"\r\n");
 /********************************************************************************************************/
 

@@ -112,7 +112,7 @@ const char *resetCauseGetName(reset_cause_t reset_cause)
 	return reset_cause_name;
 }
 
-void vIWDG_Init(float millis)
+void vIWDG_Init(IWDG_HandleTypeDef _hiwdg, float millis)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 	float iwdg_timeout_millis = millis;
@@ -145,4 +145,15 @@ void vIWDG_Init(float millis)
 	{
 		Error_Handler();
 	}
+}
+
+void _Error_Handler(char *file, int line)
+{
+    /* USER CODE BEGIN Error_Handler_Debug */
+    /* User can add his own implementation to report the HAL error return state */
+    while (1)
+    {
+        printf("\r\nError file %s line %d", file, line);
+    }
+    /* USER CODE END Error_Handler_Debug */
 }

@@ -1,7 +1,7 @@
 #include "myFlash.h"
 
-Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uint32_t *data, uint32_t data_length)
-{
+Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address,
+        uint32_t *data, uint32_t data_length) {
     HAL_StatusTypeDef status = HAL_ERROR;
     Flash_Status_t flash_status = FLASH_ERROR;
     uint32_t index = 0;
@@ -18,23 +18,15 @@ Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uin
 
     /* Erase Flash based on initialize struct */
     status = HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
-    if (status != HAL_OK)
-    {
+    if (status != HAL_OK) {
         return flash_status;
     }
 
     /* Start program flash with given data pointer */
-    for(; data_length > 0; --data_length)
-    {
-        status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, start_address, data[index]);
-#if defined(PRINT_DEBUG) /* PRINT_DEBUG */
-        PRINTF("Programing FLASH at address");
-        GET_VAR(start_address);
-        PRINTF("with data");
-        GET_VAR(data[index]);
-#endif /* !PRINT_DEBUG */
-        if (status != HAL_OK)
-        {
+    for (; data_length > 0; --data_length) {
+        status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, start_address,
+                data[index]);
+        if (status != HAL_OK) {
             return flash_status;
         }
         ++index;
@@ -45,7 +37,31 @@ Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uin
     return FLASH_SUCCESS;
 }
 
-uint32_t Flash_ReadAddress(uint32_t flash_address)
-{
-    return *(volatile uint32_t *)(flash_address);
+uint32_t Flash_ReadAddress(uint32_t flash_address) {
+    return *(volatile uint32_t*) (flash_address);
+}
+
+int8_t Flash_getAddressPage(uint32_t flash_address) {
+    uint32_t currentSector;
+    currentSector = flash_address / ADDR_FLASH_PAGE_0;
+    if (IS_PAGE_IN_RANGE(currentSector))
+        return currentSector;
+    else {
+        return -1;
+    }
+}
+
+void Flash_ErasePage(uint32_t start_address, uint32_t nb_of_delete_pages) {
+    FLASH_EraseInitTypeDef EraseInitStruct = { 0 };
+    uint32_t PageError = 0xFFFFFFFF;
+
+    HAL_FLASH_Unlock();
+
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+    EraseInitStruct.PageAddress = start_address;
+    EraseInitStruct.NbPages = nb_of_delete_pages;
+
+    HAL_FLASHEx_Erase(&EraseInitStruct, &PageError);
+    
+    HAL_FLASH_Lock();
 }

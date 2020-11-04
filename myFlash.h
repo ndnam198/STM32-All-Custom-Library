@@ -14,9 +14,11 @@
 #include "main.h"
 #include "stdio.h"
 #include "string.h"
-#include "myLib.h"
+#include "myDebug.h"
 
 /* STM32F103C8 Medium Density Flash Define - BEGIN */
+
+#define PAGE_SIZE (1024u)
 #define MAX_FLASH_PAGES 64U
 #define IS_PAGE_IN_RANGE(page) ((page >= 0) || (page < MAX_FLASH_PAGES))
 #define ADDR_FLASH_PAGE_0 ((uint32_t)0x08000000)  /* Base Address Page 0, 1Kbytes each */
@@ -88,10 +90,40 @@
 typedef enum
 {
     FLASH_SUCCESS = 0x00U,
-    FLASH_ERROR
+    FLASH_ERROR,
 } Flash_Status_t;
 
+/**
+ * @brief Write data to flash
+ * 
+ * @param start_address 
+ * @param end_address 
+ * @param data 
+ * @param data_length 
+ * @return Flash_Status_t 
+ */
 Flash_Status_t Flash_WriteWord(uint32_t start_address, uint32_t end_address, uint32_t *data, uint32_t data_length);
+
+/**
+ * @brief Read data from a specific flash address
+ * 
+ * @param flash_address 
+ * @return uint32_t 
+ */
 uint32_t Flash_ReadAddress(uint32_t flash_address);
+
+/**
+ * @brief Get the Sector object
+ * 
+ * @param flash_address[in] a 32 bit interger flash address 
+ * @return int8_t the page that the passed-in flash address belongs to or else -1
+ */
+int8_t Flash_getAddressPage(uint32_t flash_address);
+
+/**
+ * @brief Erase number of pages
+ * 
+ */
+void Flash_ErasePage(uint32_t start_address, uint32_t nb_of_page);
 
 #endif // !__MY_FLASH_H
