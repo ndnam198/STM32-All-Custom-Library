@@ -9,7 +9,7 @@ void vUARTSend(UART_HandleTypeDef huart, uint8_t *String)
 	HAL_UART_Transmit(&huart, (uint8_t *)String, strlen((char *)String), 100);
 #endif /* !USE_DMA_TX */
 }
-#endif /* !configHAL_UART */
+#endif					   /* !configHAL_UART */
 #if defined(configLL_UART) /* configLL_UART */
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String)
 {
@@ -64,9 +64,9 @@ reset_cause_t resetCauseGet(void)
 	// Needs to come *after* checking the `RCC_FLAG_PORRST` flag in order to ensure first that the reset cause is
 	// NOT a POR/PDR reset. See note below.
 	/* else if (__HAL_RCC_GET_FLAG(RCC_FLAG_BORRST))
-	{
-		reset_cause = eRESET_CAUSE_BROWNOUT_RESET;
-	} */
+     {
+     reset_cause = eRESET_CAUSE_BROWNOUT_RESET;
+     } */
 	else
 	{
 		reset_cause = eRESET_CAUSE_UNKNOWN;
@@ -112,48 +112,35 @@ const char *resetCauseGetName(reset_cause_t reset_cause)
 	return reset_cause_name;
 }
 
-void vIWDG_Init(IWDG_HandleTypeDef _hiwdg, float millis)
+void vIWDG_Init(IWDG_HandleTypeDef _hiwdg, uint32_t millis)
 {
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	float iwdg_timeout_millis = millis;
-
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI;
-	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-	{
-		Error_Handler();
-	}
-	else
-	{
-	}
+	uint32_t iwdg_timeout_millis = millis;
 
 	/* Select INDEPENDENT_WATCHDOG */
 	_hiwdg.Instance = IWDG;
-	if (iwdg_timeout_millis < 5.0)
+	/* Use prescaler LSI/128 */
+	_hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
+	_hiwdg.Init.Reload = (int)(IWDG_RESOLUTION * ((float)iwdg_timeout_millis / PRESCALER_128_UPPER_LIMIT));
+
+	if (HAL_IWDG_Init(&_hiwdg) != HAL_OK)
 	{
-		/* Use prescaler LSI/128 */
-		_hiwdg.Init.Prescaler = IWDG_PRESCALER_128;
-		_hiwdg.Init.Reload = (int)(IWDG_RESOLUTION * (iwdg_timeout_millis / PRESCALER_128_UPPER_LIMIT));
+		_Error_Handler(__FILE__, __LINE__);
 	}
 	else
 	{
-		/* Use prescaler LSI/256 */
-		_hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
-		_hiwdg.Init.Reload = (int)(IWDG_RESOLUTION * (iwdg_timeout_millis / PRESCALER_256_UPPER_LIMIT));
-	}
-	if (HAL_IWDG_Init(&_hiwdg) != HAL_OK)
-	{
-		Error_Handler();
+#if defined(PRINT_DEBUG)
+		PRINTF("Watchdog Init with timeout = %ld\r\n", (uint32_t)millis);
+#endif
 	}
 }
 
-void _Error_Handler(char *file, int line)
+__weak void _Error_Handler(char *file, int line)
 {
-    /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
-    while (1)
-    {
-        printf("\r\nError file %s line %d", file, line);
-    }
-    /* USER CODE END Error_Handler_Debug */
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	while (1)
+	{
+		PRINTF("\r\nError file %s line %d", file, line);
+	}
+	/* USER CODE END Error_Handler_Debug */
 }
