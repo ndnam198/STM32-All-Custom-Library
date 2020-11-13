@@ -28,6 +28,22 @@
 //#define configLL_UART
 #define PRINT_DEBUG /* Enable print debug information */
 
+
+/********************************************************************************************************/
+/**
+ * @brief Calculate TimeStamp based on current ticks values
+ * 
+ * @param now_tick normally passed in HAL_GetTicks(
+ */
+typedef struct {
+    uint32_t Hours;
+    uint32_t Minutes;
+    uint32_t Seconds;
+    uint32_t Millis;
+} t_TimeStamp;
+
+void vTimeStamp(uint32_t now_tick);
+
 /********************************************************************************************************/
 
 /**
@@ -104,7 +120,7 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #endif
 
 /* Retarget debug USART to use printf */
-#define __RETARGET_INIT() (RetargetInit(&DEBUG_USART))
+#define __RETARGET_INIT(__USART_INSTANCE__) (RetargetInit(&(__USART_INSTANCE__)))
 
 #if (defined(USE_RETARGET_PRINTF)) /* USE_RETARGET_PRINTF */
 #define PRINTF               (printf)
@@ -133,6 +149,7 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
     } while (0)
 
 #define newline (PRINTF("\r\n"))
+
 /********************************************************************************************************/
 
 #endif /* !__MY_DEBUG_H */
