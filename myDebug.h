@@ -35,6 +35,8 @@
  * 
  * @param now_tick normally passed in HAL_GetTicks(
  */
+void vTimeStamp(uint32_t now_tick);
+
 typedef struct {
     uint32_t Hours;
     uint32_t Minutes;
@@ -42,7 +44,6 @@ typedef struct {
     uint32_t Millis;
 } t_TimeStamp;
 
-void vTimeStamp(uint32_t now_tick);
 
 /********************************************************************************************************/
 
@@ -59,7 +60,8 @@ void vTimeStamp(uint32_t now_tick);
     }while(0)
 
 typedef enum reset_cause {
-    eRESET_CAUSE_UNKNOWN = 0, eRESET_CAUSE_LOW_POWER_RESET, /*  */
+    eRESET_CAUSE_UNKNOWN = 0, 
+    eRESET_CAUSE_LOW_POWER_RESET, /*  */
     eRESET_CAUSE_WINDOW_WATCHDOG_RESET, /*  */
     eRESET_CAUSE_INDEPENDENT_WATCHDOG_RESET, /* IWDG Timeout */
     eRESET_CAUSE_SOFTWARE_RESET, /* Reset caused by NVIC_SystemReset() */
@@ -94,7 +96,7 @@ __weak void _Error_Handler(char *file, int line);
 #define IWDG_RESOLUTION             (4095u)
 
 /* Init Independant watchdog timer */
-__weak void vIWDG_Init(IWDG_HandleTypeDef _hiwdg, uint32_t millis);
+__weak void vIWDG_Init(IWDG_HandleTypeDef* hiwdg, uint32_t millis);
 
 /********************************************************************************************************/
 /**
@@ -125,7 +127,15 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #if (defined(USE_RETARGET_PRINTF)) /* USE_RETARGET_PRINTF */
 #define PRINTF               (printf)
 #define PRINT_VAR(var)       (printf(#var " = %lu\r\n", var))
-#elif                              /* !USE_RETARGET_PRINTF */
+#define PRINT_ARRAY(array, offset)                              \
+	do                                                          \
+	{                                                           \
+		for (uint32_t i = offset; i < ARRAY_LENGTH(array); i++) \
+		{                                                       \
+			printf(#array "[%lu] = %lu\r\n", i, array[i]);      \
+		}                                                       \
+	} while (0)
+#elif /* !USE_RETARGET_PRINTF */
 #define PRINTF(str)          (vUARTSend(DEBUG_USART, (uint8_t *)str))
 #define PRINT_VAR(var)                                      \
     do                                                      \
