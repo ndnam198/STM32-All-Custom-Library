@@ -1,0 +1,19 @@
+vIWDG_Init(&hiwdg, 5000);
+__RETARGET_INIT(DEBUG_USART);
+__PRINT_RESET_CAUSE();
+__MY_OFF_ALL_LED();
+/* USER CODE END 2 */
+
+/* Infinite loop */
+/* USER CODE BEGIN WHILE */
+prev_time_blinkled = HAL_GetTick();
+while (1)
+{
+if (HAL_GetTick() - prev_time_blinkled >= BLINK_LED_FREQ)
+{
+    prev_time_blinkled = HAL_GetTick();
+    vTimeStamp(HAL_GetTick());
+    __MY_TOGGLE_LED(LED_4);
+}
+HAL_IWDG_Refresh(&hiwdg);
+}
