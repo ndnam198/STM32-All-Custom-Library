@@ -95,6 +95,14 @@ typedef enum
     SHT31_FAILED,
 } SHT31_StatusTypeDef;
 
+typedef struct{
+    uint8_t *raw_data_buffer;
+    float temp;
+    float humid;
+    uint8_t temp_crc;
+    uint8_t humid_crc;
+} SHT31_TypeDef;
+
 /* Function prototype */
 SHT31_StatusTypeDef SHT3x_SendCommand(uint8_t *command);
 SHT31_StatusTypeDef SHT3x_ReadData(uint8_t *data_buffer);
