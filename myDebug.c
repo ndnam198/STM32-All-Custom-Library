@@ -134,7 +134,7 @@ __weak void _Error_Handler(char *file, int line)
 	/* User can add his own implementation to report the HAL error return state */
 	while (1)
 	{
-		PRINTF("\r\nError file %s line %d", file, line);
+		printf("\r\nError file %s line %d", file, line);
 	}
 	/* USER CODE END Error_Handler_Debug */
 }

@@ -1,127 +1,270 @@
 #include "myI2C.h"
+#include "retarget.h"
 
-static e_Error I2c_WaitWhileClockStreching(uint8_t timeout);
+static void delay_ms(uint32_t ms);
 
-void DelayMicroSeconds(uint32_t nbrOfUs) /* -- adapt this delay for your uC -- */
+void I2C_Init(void)
 {
-    uint32_t i;
-    for (i = 0; i < nbrOfUs; i++)
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    /* Clock Port B Enable - IOPBEN bit = 1 */
+    RCC->APB2ENR |= (1 << 3);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    I2C_SCL_SET;
+    I2C_SDA_SET;
+}
+
+void I2C_Start(void)
+{
+    I2C_SDA_OUT();
+    I2C_SCL_SET;
+    I2C_SDA_SET;
+    delay_ms(4);
+    I2C_SDA_RESET;
+    delay_ms(4);
+    I2C_SCL_RESET;
+}
+
+void I2C_Stop(void)
+{
+    I2C_SDA_OUT();
+    I2C_SCL_RESET;
+    I2C_SDA_RESET;
+    delay_ms(4);
+    I2C_SDA_SET;
+    I2C_SCL_SET;
+    delay_ms(4);
+}
+
+void I2C_Send_Byte(uint8_t txd)
+{
+    int i = 0;
+    I2C_SDA_OUT();
+    I2C_SCL_RESET;
+    for (i = 0; i < 8; i++)
     {
-        __NOP(); // nop's may be added or removed for timing adjustment
-        __NOP();
-        __NOP();
-        __NOP();
-    }
-}
-//-----------------------------------------------------------------------------
-void I2c_Init(void) /* -- adapt the init for your uC -- */
-{
-    RCC->APB1ENR |= 0x00200000; // I/O port B clock enabled
-    SDA_OPEN();                 // I2C-bus idle mode SDA released
-    SCL_OPEN();                 // I2C-bus idle mode SCL released
-    GPIOB->CRL &= 0x00FFFFFF; // set open-drain output for SDA and SCL
-    GPIOB->CRL |= 0x55000000; //
-}
-//-----------------------------------------------------------------------------
-void I2c_StartCondition(void)
-{
-    SDA_OPEN();
-    DelayMicroSeconds(1);
-    SCL_OPEN();
-    DelayMicroSeconds(1);
-    SDA_LOW();
-    DelayMicroSeconds(10); // hold time start condition (t_HD;STA)
-    SCL_LOW();
-    DelayMicroSeconds(10);
-}
-//-----------------------------------------------------------------------------
-void I2c_StopCondition(void)
-{
-    SCL_LOW();
-    DelayMicroSeconds(1);
-    SDA_LOW();
-    DelayMicroSeconds(1);
-    SCL_OPEN();
-    DelayMicroSeconds(10); // set-up time stop condition (t_SU;STO)
-    SDA_OPEN();
-    DelayMicroSeconds(10);
-}
-//-----------------------------------------------------------------------------
-e_Error I2c_WriteByte(uint8_t txByte)
-{
-    e_Error error = NO_ERROR;
-    uint8_t mask;
-    for (mask = 0x80; mask > 0; mask >>= 1) // shift bit for masking (8 times)
-    {
-        /* Transfer MSB first */
-        if ((mask & txByte) == 0)
-            SDA_LOW(); // masking txByte, write bit to SDA-Line
+        uint8_t send_bit = (txd & 0x80) >> 7;
+        if (send_bit == 1)
+        {
+            I2C_SDA_SET;
+        }
         else
-            SDA_OPEN();
-        DelayMicroSeconds(1); // data set-up time (t_SU;DAT)
-        SCL_OPEN();           // generate clock pulse on SCL
-        DelayMicroSeconds(5); // SCL high time (t_HIGH)
-        SCL_LOW();
-        DelayMicroSeconds(1); // data hold time(t_HD;DAT)
+        {
+            I2C_SDA_RESET;
+        }
+        txd <<= 1;
+        delay_ms(2);
+        I2C_SCL_SET;
+        delay_ms(2);
+        I2C_SCL_RESET;
     }
-    SDA_OPEN();           // release SDA-line
-    SCL_OPEN();           // clk #9 for ack
-    DelayMicroSeconds(1); // data set-up time (t_SU;DAT)
-    if (SDA_READ)
-        error = ACK_ERROR; // check ack from i2c slave
-    SCL_LOW();
-    DelayMicroSeconds(20); // wait to see byte package on scope
-    return error;          // return error code
 }
-//-----------------------------------------------------------------------------
-e_Error I2c_ReadByte(uint8_t *rxByte, e_ACK ack, uint8_t timeout)
+
+void I2C_SendACK(void)
 {
-    e_Error error = NO_ERROR;
-    uint8_t mask;
-    *rxByte = 0x00;
-    SDA_OPEN();                             // release SDA-line
-    for (mask = 0x80; mask > 0; mask >>= 1) // shift bit for masking (8 times)
+    I2C_SCL_RESET;
+    I2C_SDA_OUT();
+    I2C_SDA_RESET;
+    delay_ms(2);
+    I2C_SCL_SET;
+    delay_ms(2);
+    I2C_SCL_RESET;
+}
+
+void I2C_SendNACK(void)
+{
+    I2C_SCL_RESET;
+    I2C_SDA_OUT();
+    I2C_SDA_SET;
+    delay_ms(2);
+    I2C_SCL_SET;
+    delay_ms(2);
+    I2C_SCL_RESET;
+}
+
+uint8_t I2C_Read_Byte(unsigned char ack)
+{
+    int i = 0;
+    uint8_t rec = 0;
+    I2C_SDA_IN();
+    for (i = 0; i < 8; i++)
     {
-        SCL_OPEN();                                   // start clock on SCL-line
-        DelayMicroSeconds(1);                         // clock set-up time (t_SU;CLK)
-        error = I2c_WaitWhileClockStreching(timeout); // wait while clock streching
-        DelayMicroSeconds(3);                         // SCL high time (t_HIGH)
-        if (SDA_READ)
-            *rxByte |= mask; // read bit
-        SCL_LOW();
-        DelayMicroSeconds(1); // data hold time(t_HD;DAT)
+        I2C_SCL_RESET;
+        delay_ms(2);
+        I2C_SCL_SET;
+        delay_ms(2);
+        rec <<= 1;
+        if (I2C_SDA_READ)
+        {
+            rec++;
+        }
     }
-    if (ack == ACK)
-        SDA_LOW(); // send acknowledge if necessary
+    if (!ack)
+    {
+        I2C_SendACK();
+    }
     else
-        SDA_OPEN();
-    DelayMicroSeconds(1); // data set-up time (t_SU;DAT)
-    SCL_OPEN();           // clk #9 for ack
-    DelayMicroSeconds(5); // SCL high time (t_HIGH)
-    SCL_LOW();
-    SDA_OPEN();            // release SDA-line
-    DelayMicroSeconds(20); // wait to see byte package on scope
-    return error;          // return with no error
-}
-//-----------------------------------------------------------------------------
-e_Error I2c_GeneralCallReset(void)
-{
-    e_Error error;
-    I2c_StartCondition();
-    error = I2c_WriteByte(0x00);
-    if (error == NO_ERROR)
-        error = I2c_WriteByte(0x06);
-    return error;
-}
-//-----------------------------------------------------------------------------
-static e_Error I2c_WaitWhileClockStreching(uint8_t timeout)
-{
-    e_Error error = NO_ERROR;
-    while (SCL_READ == 0)
     {
-        if (timeout-- == 0)
-            return TIMEOUT_ERROR;
-        DelayMicroSeconds(1000);
+        I2C_SendNACK();
     }
-    return error;
+    return rec;
 }
+
+uint8_t I2C_Wait_Ack(void)
+{
+    uint8_t time = 0;
+    I2C_SDA_IN();
+    I2C_SDA_SET;
+    delay_ms(1);
+    I2C_SCL_SET;
+    delay_ms(1);
+    while (I2C_SDA_READ)
+    {
+        time++;
+        if (time > 10000)
+        {
+            printf("I2C Bus Timout\r\n");
+            I2C_Stop();
+            return 0; /* Return 0 to avoid application halt */
+        }
+    }
+    I2C_SCL_RESET;
+    return 0;
+}
+
+void I2C_Cmd_Write(uint8_t add, uint8_t reg, uint8_t data)
+{
+    I2C_Start();
+
+    I2C_Send_Byte(add | 0);
+    while (I2C_Wait_Ack())
+        ;
+    I2C_Send_Byte(reg);
+    while (I2C_Wait_Ack())
+        ;
+    I2C_Send_Byte(data);
+    while (I2C_Wait_Ack())
+        ;
+
+    I2C_Stop();
+    delay_ms(2);
+}
+
+uint8_t I2C_Write(uint8_t addr, uint8_t reg, uint8_t data)
+{
+    I2C_Start();
+
+    I2C_Send_Byte(addr | 0);
+    if (I2C_Wait_Ack())
+    {
+        I2C_Stop();
+        return 1;
+    }
+    I2C_Send_Byte(reg);
+    if (I2C_Wait_Ack())
+    {
+        I2C_Stop();
+        return 1;
+    }
+    I2C_Send_Byte(data);
+    if (I2C_Wait_Ack())
+    {
+        I2C_Stop();
+        return 1;
+    }
+
+    I2C_Stop();
+    delay_ms(2);
+    return 0;
+}
+
+uint8_t Read_I2C(uint8_t addr, uint8_t reg)
+{
+    I2C_Start();
+    I2C_Send_Byte(addr | 0);
+    while (I2C_Wait_Ack())
+        ;
+    I2C_Send_Byte(reg);
+    while (I2C_Wait_Ack())
+        ;
+
+    I2C_Start();
+    I2C_Send_Byte(addr | 1);
+    while (I2C_Wait_Ack())
+        ;
+    reg = I2C_Read_Byte(1);
+    I2C_Stop();
+    delay_ms(2);
+    return reg;
+}
+
+uint8_t I2C_ReadMulti(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *buf)
+{
+    I2C_Start();
+    I2C_Send_Byte(addr | 0);
+    while (I2C_Wait_Ack())
+        ;
+    I2C_Send_Byte(reg);
+    while (I2C_Wait_Ack())
+        ;
+
+    I2C_Start();
+    I2C_Send_Byte(addr | 1);
+    while (I2C_Wait_Ack())
+        ;
+
+    while (len)
+    {
+        if (len == 1)
+            *buf = I2C_Read_Byte(1);
+        else
+            *buf = I2C_Read_Byte(0);
+        len--;
+        buf++;
+    }
+
+    I2C_Stop();
+    return 0;
+}
+
+uint8_t I2C_WriteMulti(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *buf)
+{
+    uint8_t i = 0;
+    I2C_Start();
+    I2C_Send_Byte(addr | 0);
+    while (I2C_Wait_Ack())
+        ;
+    I2C_Send_Byte(reg);
+    while (I2C_Wait_Ack())
+        ;
+
+    for (i = 0; i < len; i++)
+    {
+        I2C_Send_Byte(buf[i]);
+        if (I2C_Wait_Ack())
+        {
+            I2C_Stop();
+            return 1;
+        }
+    }
+    I2C_Stop();
+    return 0;
+}
+
+static void delay_ms(uint32_t ms)
+{
+    volatile uint32_t delay = 1000 * ms;
+    while (delay--)
+    {
+        __NOP();
+        __NOP();
+        __NOP();
+        __NOP();
+    }
+}
+
+/********************************************************************************************************************/

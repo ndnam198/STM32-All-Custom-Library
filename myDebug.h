@@ -44,6 +44,8 @@ typedef struct {
     uint32_t Millis;
 } t_TimeStamp;
 
+#define __PRINT_TIME_STAMP()    (vTimeStamp(HAL_GetTick()))
+
 
 /********************************************************************************************************/
 
@@ -55,7 +57,7 @@ typedef struct {
 #define __PRINT_RESET_CAUSE()                         \
     do                                                \
     {                                                 \
-        PRINTF(resetCauseGetName(resetCauseGet()));   \
+        printf(resetCauseGetName(resetCauseGet()));   \
         newline;                                      \
     }while(0)
 
@@ -125,7 +127,6 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #define __RETARGET_INIT(__USART_INSTANCE__) (RetargetInit(&(__USART_INSTANCE__)))
 
 #if (defined(USE_RETARGET_PRINTF)) /* USE_RETARGET_PRINTF */
-#define PRINTF               (printf)
 #define PRINT_VAR(var)       (printf(#var " = %lu\r\n", var))
 #define PRINT_ARRAY(array, offset)                              \
 	do                                                          \
@@ -158,7 +159,7 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
         }                                           \
     } while (0)
 
-#define newline (PRINTF("\r\n"))
+#define newline (printf("\r\n"))
 
 /********************************************************************************************************/
 

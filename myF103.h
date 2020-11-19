@@ -23,13 +23,17 @@
 /****************************************** BKFET_BOARD DEFINE - BEGIN */
 #define BKFET_BOARD ((void)0U)
 
+#define LED4_OFF() (GPIOB->BSRR |= 0x00000100)
+#define LED4_ON() (GPIOB->BRR |= 0x00000100)
+#define LED1_OFF() (GPIOB->BSRR |= 0x00000020)
+#define LED1_ON() (GPIOB->BRR |= 0x00000020)
+
 #define LED_1   GPIO_PIN_5
 #define LED_2   GPIO_PIN_12
 #define LED_3   GPIO_PIN_11
 #define LED_4   GPIO_PIN_8
 #define ON      (0U)
 #define OFF     (1U)
-
 
 #define __MY_TOGGLE_LED(__LED_NUMBER__)                                    \
   (((__LED_NUMBER__) == LED_1) ? (HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5))   :\

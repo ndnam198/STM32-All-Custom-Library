@@ -16,7 +16,7 @@
 #include "main.h"
 #include "retarget.h"
 #include "myDebug.h"
-#include "myI2C_2.h"
+#include "myI2C.h"
 
 #define SHT3x_I2C_ADDRESS_A (0x44 << 1) /* default value when ADDR pin connected to VSS */
 #define SHT3x_I2C_ADDRESS_B (0x45 << 1) /* ADDR pin connected to VDD */

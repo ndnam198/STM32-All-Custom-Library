@@ -1,4 +1,4 @@
-#include "mySHT3x_2.h"
+#include "Vendor_SHT3x_2.h"
 
 static uint8_t _i2cAddress; // I2C Address
 //-- Static function prototypes -----------------------------------------------

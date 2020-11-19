@@ -1,91 +1,57 @@
-/**
- * @file myI2C.h
- * @author your name (you@domain.com)
- * @brief 
- * @version 0.1
- * @date 2020-11-19
- * 
- * @copyright Copyright (c) 2020
- * 
- */
-#ifndef __MYI2C_H /* __MYI2C_H */
-#define __MYI2C_H
+#ifndef __MY_I2C_2_H
+#define __MY_I2C_2_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include "main.h"
 
+#define I2C_SDA_IN()              \
+	{                             \
+		GPIOB->CRL &= 0X0FFFFFFF; \
+		GPIOB->CRL |= 8 << 28;    \
+	} //PB7IN
+#define I2C_SDA_OUT()             \
+	{                             \
+		GPIOB->CRL &= 0X0FFFFFFF; \
+		GPIOB->CRL |= 3 << 28;    \
+	} //PB7OUT
+
+#define I2C_SCL PBout(6) //SCL
+#define I2C_SDA PBout(7) //SDA
+#define READ_SDA PBin(7) //SDA IN
+
+/********************************************************************************************************************/
+/* I2C Pin Port */
+#define I2C_SCL_Port (GPIOB)
+#define I2C_SDA_Port (GPIOB)
+
 /* I2C1: SDA - PB7; SCL - PB6 */
-#define SDA_LOW() (GPIOB->BRR |= 0x00000080)  // set SDA to low
-#define SDA_OPEN() (GPIOB->BSRR |= 0x00000080) // set SDA to open-drain
-#define SDA_READ (GPIOB->IDR & 0x0080)        // read SDA
-#define SCL_LOW() (GPIOB->BRR = 0x00000040)  // set SCL to low
-#define SCL_OPEN() (GPIOB->BSRR = 0x00000040) // set SCL to open-drain
-#define SCL_READ (GPIOB->IDR & 0x0040)        // read SCL
+#define I2C_SCL_Pos (6)
+#define I2C_SDA_Pos (7)
 
-typedef enum
-{
-    NO_ERROR = 0x00,       // no error
-    ACK_ERROR = 0x01,      // no acknowledgment error
-    CHECKSUM_ERROR = 0x02, // checksum mismatch error
-    TIMEOUT_ERROR = 0x04,  // timeout error
-    PARM_ERROR = 0x80,     // parameter out of range error
-} e_Error;
+#define I2C_SCL_Pin_Msk (1u << I2C_SCL_Pos) /* 0x00000040 */
+#define I2C_SDA_Pin_Msk (1u << I2C_SDA_Pos) /* 0x00000080 */
 
-typedef enum
-{
-    FALSE = 0,
-    TRUE = 1
-} e_bool;
+#define I2C_SCL_SET (I2C_SCL_Port->BSRR = I2C_SCL_Pin_Msk)
+#define I2C_SCL_RESET (I2C_SCL_Port->BRR = I2C_SCL_Pin_Msk)
+#define I2C_SCL_READ (I2C_SCL_Port->IDR & I2C_SCL_Pin_Msk)
 
-//-- Enumerations -------------------------------------------------------------
-// I2C acknowledge
-typedef enum
-{
-    ACK = 0,
-    NACK = 1,
-} e_ACK;
+#define I2C_SDA_SET (I2C_SDA_Port->BSRR |= I2C_SDA_Pin_Msk)
+#define I2C_SDA_RESET (I2C_SDA_Port->BRR |= I2C_SDA_Pin_Msk)
+#define I2C_SDA_READ (I2C_SDA_Port->IDR & I2C_SDA_Pin_Msk)
+//I2C
 
-void DelayMicroSeconds(uint32_t nbrOfUs);
-//=============================================================================
-void I2c_Init(void);
-//=============================================================================
-// Initializes the ports for I2C interface.
-//-----------------------------------------------------------------------------
-//=============================================================================
-void I2c_StartCondition(void);
-//=============================================================================
-// Writes a start condition on I2C-Bus.
-//-----------------------------------------------------------------------------
-// remark: Timing (delay) may have to be changed for different microcontroller.
-// _____
-// SDA: |_____
-// _______
-// SCL: |___
-//=============================================================================
-void I2c_StopCondition(void);
-//=============================================================================
-// Writes a stop condition on I2C-Bus.
-//-----------------------------------------------------------------------------
-// remark: Timing (delay) may have to be changed for different microcontroller.
-// _____
-// SDA: _____|
-// _______
-// SCL: ___|
-//=============================================================================
-e_Error I2c_WriteByte(uint8_t txByte);
-//=============================================================================
-// Writes a byte to I2C-Bus and checks acknowledge.
-//-----------------------------------------------------------------------------
-//
-// return: error: ACK_ERROR = no acknowledgment from sensor
-// NO_ERROR = no error
-//
-// remark: Timing (delay) may have to be changed for different microcontroller.
-//=============================================================================
-e_Error I2c_ReadByte(uint8_t *rxByte, e_ACK ack, uint8_t timeout);
-e_Error I2c_GeneralCallReset(void);
+void I2C_Init(void);
+void I2C_Start(void);
+void I2C_Stop(void);
+void I2C_Send_Byte(uint8_t txd);
+uint8_t I2C_Read_Byte(unsigned char ack);
+uint8_t I2C_Wait_Ack(void);
+void I2C_SendACK(void);
+void I2C_SendNACK(void);
+///////////////////////////////
+void I2C_Cmd_Write(uint8_t add, uint8_t reg, uint8_t data);
+uint8_t I2C_Write(uint8_t addr, uint8_t reg, uint8_t data);
+uint8_t Read_I2C(uint8_t addr, uint8_t reg);
+uint8_t I2C_ReadMulti(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *buf);
+uint8_t I2C_WriteMulti(uint8_t addr, uint8_t reg, uint8_t len, uint8_t *buf);
 
-#endif /* !__MYI2C_H */
+#endif
