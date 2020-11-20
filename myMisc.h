@@ -20,7 +20,7 @@
 /****************************************** GENERAL-DEFINE-BEGIN */
 
 /* Compare a string to a destined string, return 1 if equal, else return 0 */
-#define IS_MY_STRING(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
+#define IS_STRING(src, des) ((strcmp((char *)src, des)) == 0 ? 1 : 0)
 
 /* Return the number of elements in an array */
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))

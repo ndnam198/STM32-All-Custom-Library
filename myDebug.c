@@ -168,3 +168,26 @@ void vTimeStamp(uint32_t now_tick)
 	return;
 }
 
+void vMCUProcessingEvaluate(MCUProcessingEvaluate_t *mcu_process_time_handle, uint32_t current_processing_time)
+{
+	mcu_process_time_handle->current_process_time = current_processing_time;
+	if (current_processing_time > mcu_process_time_handle->maxmimum_process_time)
+	{
+		mcu_process_time_handle->maxmimum_process_time = current_processing_time;
+	}
+	if (current_processing_time < mcu_process_time_handle->minimum_process_time)
+	{
+		mcu_process_time_handle->minimum_process_time = current_processing_time;
+	}
+}
+
+void vPrintProcessingTime(MCUProcessingEvaluate_t *mcu_process_time_handle)
+{
+	PRINTF(" \
+            Current processing time: %ld\r\n\
+            Max processing time: %ld\r\n\
+            Min processing time: %ld\r\n",
+		   mcu_process_time_handle->current_process_time,
+		   mcu_process_time_handle->maxmimum_process_time,
+		   mcu_process_time_handle->minimum_process_time);
+}

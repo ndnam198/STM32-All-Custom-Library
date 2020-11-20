@@ -18,10 +18,10 @@
 #include "main.h"
 #include "retarget.h"
 
-/**
- * @brief Optional configuration
- * 
- */
+/* -------------------------------------------------------------------------- */
+/*                            USER-OPTIONAL-DEFINE                            */
+/* -------------------------------------------------------------------------- */
+
 #define configHAL_UART
 #define USE_RETARGET_PRINTF
 //#define USE_DMA_TX
@@ -29,7 +29,35 @@
 #define PRINT_DEBUG /* Enable print debug information */
 
 
-/********************************************************************************************************/
+/* -------------------------------------------------------------------------- */
+/*                         TIME-PROCESSING-MANAGEMENT                         */
+/* -------------------------------------------------------------------------- */
+
+typedef struct TimeStamp{
+    uint32_t Hours;
+    uint32_t Minutes;
+    uint32_t Seconds;
+    uint32_t Millis;
+} TimeStamp_t;
+
+typedef struct MCUProcessingEvaluate{
+    uint32_t minimum_process_time;
+    uint32_t maxmimum_process_time;
+    uint32_t current_process_time;
+} MCUProcessingEvaluate_t;
+
+#define __PRINT_TIME_STAMP()    (vTimeStamp(HAL_GetTick()))
+
+/**
+ * @brief Evaluate MCU processing time every superloop elapsed
+ * 
+ * @param mcu_process_time_handle 
+ * @param current_processing_time 
+ */
+void vMCUProcessingEvaluate(MCUProcessingEvaluate_t* mcu_process_time_handle, uint32_t current_processing_time);
+
+void vPrintProcessingTime(MCUProcessingEvaluate_t *mcu_process_time_handle);
+
 /**
  * @brief Calculate TimeStamp based on current ticks values
  * 
@@ -37,29 +65,9 @@
  */
 void vTimeStamp(uint32_t now_tick);
 
-typedef struct {
-    uint32_t Hours;
-    uint32_t Minutes;
-    uint32_t Seconds;
-    uint32_t Millis;
-} t_TimeStamp;
-
-#define __PRINT_TIME_STAMP()    (vTimeStamp(HAL_GetTick()))
-
-
-/********************************************************************************************************/
-
-/**
- * @brief Reset Cause
- * 
- */
-/* Reset cause enumeration */
-#define __PRINT_RESET_CAUSE()                         \
-    do                                                \
-    {                                                 \
-        printf(resetCauseGetName(resetCauseGet()));   \
-        newline;                                      \
-    }while(0)
+/* -------------------------------------------------------------------------- */
+/*           MCU-RESET-CAUSE-MANAGEMENT & INDEPENDENCE-WATCHDOG-INIT          */
+/* -------------------------------------------------------------------------- */
 
 typedef enum reset_cause {
     eRESET_CAUSE_UNKNOWN = 0, 
@@ -72,22 +80,28 @@ typedef enum reset_cause {
     eRESET_CAUSE_BROWNOUT_RESET, /*  */
 } reset_cause_t;
 
-/* Check reset flags in RCC_CSR registers to clarify reset cause */
-reset_cause_t resetCauseGet(void);
 
-/* Get reset cause name in string */
-__weak const char* resetCauseGetName(reset_cause_t reset_cause);
-/********************************************************************************************************/
+#define __PRINT_RESET_CAUSE()                         \
+    do                                                \
+    {                                                 \
+        printf(resetCauseGetName(resetCauseGet()));   \
+        newline;                                      \
+    }while(0)
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @param  file: The file name as string.
- * @param  line: The line in file as a number.
- * @retval None
+ * @brief Check reset flags in RCC_CSR registers to clarify reset cause
+ * 
+ * @return reset_cause_t 
  */
-__weak void _Error_Handler(char *file, int line);
+reset_cause_t resetCauseGet(void);
 
-/********************************************************************************************************/
+/**
+ * @brief Get reset cause name in string
+ * 
+ * @param reset_cause 
+ * @return __weak const* 
+ */
+__weak const char* resetCauseGetName(reset_cause_t reset_cause);
 
 /**
  * @brief IWDG 
@@ -97,22 +111,37 @@ __weak void _Error_Handler(char *file, int line);
 #define PRESCALER_256_UPPER_LIMIT   (26214u)
 #define IWDG_RESOLUTION             (4095u)
 
-/* Init Independant watchdog timer */
-__weak void vIWDG_Init(IWDG_HandleTypeDef* hiwdg, uint32_t millis);
-
-/********************************************************************************************************/
 /**
- * @brief Print debugging log via USART
+ * @brief Init Independant watchdog timer
  * 
+ * @param hiwdg 
+ * @param millis 
  */
-/* String used to store temporary string data */
+void vIWDG_Init(IWDG_HandleTypeDef* hiwdg, uint32_t millis);
+
+/* -------------------------------------------------------------------------- */
+/*                            ERROR-HANDLE-FUNCTION                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief  This function is executed in case of error occurrence, defined as __weak
+ * @param  file: The file name as string.
+ * @param  line: The line in file as a number.
+ * @retval None
+ */
+__weak void _Error_Handler(char *file, int line);
+
+
+/* -------------------------------------------------------------------------- */
+/*                              USART-DEBUG-PRINT                             */
+/* -------------------------------------------------------------------------- */
 
 #define VARIABLE_BUFFER_SIZE (10U)
 #define STRING_BUFFER_SIZE   (100U)
 
-char ucGeneralString[VARIABLE_BUFFER_SIZE];
 
 #if defined(configHAL_UART) /* configHAL_UART */
+char ucGeneralString[VARIABLE_BUFFER_SIZE];
 extern UART_HandleTypeDef huart2;
 #define DEBUG_USART huart2
 /* Print out a string to USART */
@@ -127,7 +156,9 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String);
 #define __RETARGET_INIT(__USART_INSTANCE__) (RetargetInit(&(__USART_INSTANCE__)))
 
 #if (defined(USE_RETARGET_PRINTF)) /* USE_RETARGET_PRINTF */
+#define PRINTF  (printf)
 #define PRINT_VAR(var)       (printf(#var " = %lu\r\n", var))
+#define PRINT_ADDRESS(var)   (printf("Address of " #var " : %d\r\n", &var))
 #define PRINT_ARRAY(array, offset)                              \
 	do                                                          \
 	{                                                           \
