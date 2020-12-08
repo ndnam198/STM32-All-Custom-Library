@@ -55,5 +55,7 @@ __weak int32_t ucParseCLICommand(uint8_t *command, uint8_t *target_string_array)
  * 
  * @param uart_receive_handle 
  */
-void vServeCLICommand(USART_StringReceive_t *uart_receive_handle);
+void vExecuteCLIcmd(USART_StringReceive_t *uart_receive_handle);
+
+
 #endif /* !__MY_UART_HANDLE_H */

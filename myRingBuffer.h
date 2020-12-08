@@ -48,7 +48,7 @@ FIFO_Status_t FIFO_Init(FIFO_StructTypedef *FIFO_Struct, uint32_t number_of_elem
  * @brief 
  * 
  * @param FIFO_Struct 
- * @param data 
+ * @param data data that will be written into ring buffer 
  * @return FIFO_Status_t 
  */
 FIFO_Status_t FIFO_WriteData(FIFO_StructTypedef *FIFO_Struct, uint8_t data);
@@ -57,7 +57,7 @@ FIFO_Status_t FIFO_WriteData(FIFO_StructTypedef *FIFO_Struct, uint8_t data);
  * @brief 
  * 
  * @param FIFO_Struct 
- * @param data 
+ * @param data buffer to copy data from ring_buffer into it 
  * @return FIFO_Status_t 
  */
 FIFO_Status_t FIFO_ReadData(FIFO_StructTypedef *FIFO_Struct, uint8_t *data);

@@ -32,8 +32,8 @@
 #define LED_2   GPIO_PIN_12
 #define LED_3   GPIO_PIN_11
 #define LED_4   GPIO_PIN_8
-#define ON      (0U)
 #define OFF     (1U)
+#define ON      (0U)
 
 #define __MY_TOGGLE_LED(__LED_NUMBER__)                                    \
   (((__LED_NUMBER__) == LED_1) ? (HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5))   :\

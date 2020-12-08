@@ -3,11 +3,7 @@
 #if defined(configHAL_UART) /* configHAL_UART */
 void vUARTSend(UART_HandleTypeDef huart, uint8_t *String)
 {
-#if defined(USE_DMA_TX) /* USE_DMA_TX */
-	HAL_UART_Transmit_DMA(&huart, (uint8_t *)String, strlen((char *)String));
-#else
 	HAL_UART_Transmit(&huart, (uint8_t *)String, strlen((char *)String), 100);
-#endif /* !USE_DMA_TX */
 }
 #endif					   /* !configHAL_UART */
 #if defined(configLL_UART) /* configLL_UART */
@@ -61,7 +57,7 @@ reset_cause_t resetCauseGet(void)
 	{
 		reset_cause = eRESET_CAUSE_EXTERNAL_RESET_PIN_RESET;
 	}
-	// Needs to come *after* checking the `RCC_FLAG_PORRST` flag in order to ensure first that the reset cause is
+	// Needs to come *after* checking the `RCC_FLAG_PORRST` flag in order to confirm that the reset cause is
 	// NOT a POR/PDR reset. See note below.
 	/* else if (__HAL_RCC_GET_FLAG(RCC_FLAG_BORRST))
      {
@@ -126,28 +122,56 @@ void vIWDG_Init(IWDG_HandleTypeDef *hiwdg, uint32_t millis)
 	{
 		_Error_Handler(__FILE__, __LINE__);
 	}
+
+#ifdef PRINT_DEBUG
+	printf("Set IWDG %lums\r\n", IWDG_TIME);
+#endif
 }
 
 __weak void _Error_Handler(char *file, int line)
 {
-	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
 	while (1)
 	{
 		printf("\r\nError file %s line %d", file, line);
 	}
-	/* USER CODE END Error_Handler_Debug */
 }
 
 void vTimeStamp(uint32_t now_tick)
 {
 	uint8_t second, minute, hour;
 	uint32_t millis_second, now_second;
+	uint32_t hal_tick_freq;
+	uint32_t divider;
 
+	// HAL_TICK_FREQ_10HZ = 100U,
+	// HAL_TICK_FREQ_100HZ = 10U,
+	// HAL_TICK_FREQ_1KHZ = 1U,
+	// HAL_TICK_FREQ_DEFAULT = HAL_TICK_FREQ_1KHZ
+	hal_tick_freq = HAL_GetTickFreq();
+	if (hal_tick_freq == HAL_TICK_FREQ_1KHZ)
+	{
+		divider = 1000;
+	}
+	else if (hal_tick_freq == HAL_TICK_FREQ_100HZ)
+	{
+		divider = 10000;
+	}
+	if (hal_tick_freq == HAL_TICK_FREQ_10HZ)
+	{
+		divider = 100000;
+	}
 	/* ex: 450235ms => now_second = 450 */
-	now_second = now_tick / 1000;
+	now_second = now_tick / divider;
 	/* ex: 450235ms => millis_second = 235 */
-	millis_second = now_tick - now_second * 1000;
+	millis_second = now_tick - now_second * divider;
+	if (millis_second > 10000)
+	{
+		millis_second /= 100;
+	}
+	else if (millis_second > 1000)
+	{
+		millis_second /= 10;
+	}
 	/* ex: 450235ms => 450/60 = 7 */
 	minute = now_second / 60;
 	/* ex: 450235ms => 450 - 7*60 = 30 */
@@ -163,31 +187,53 @@ void vTimeStamp(uint32_t now_tick)
 	}
 
 #if (defined(PRINT_DEBUG))
-	printf("[%02d:%02d:%02d.%03ld]\r\n", hour, minute, second, millis_second);
+	printf("[%02d:%02d:%02d.%03lu]\r\n", hour, minute, second, millis_second);
 #endif
 	return;
 }
 
-void vMCUProcessingEvaluate(MCUProcessingEvaluate_t *mcu_process_time_handle, uint32_t current_processing_time)
+void vMCUProcessTimeUpdate(MCUProcessingEvaluate_t *mcu_process_time_handle, uint32_t current_processing_time)
 {
-	mcu_process_time_handle->current_process_time = current_processing_time;
-	if (current_processing_time > mcu_process_time_handle->maxmimum_process_time)
+	//    HAL_TICK_FREQ_10HZ         = 100U,
+	//    HAL_TICK_FREQ_100HZ        = 10U,
+	//    HAL_TICK_FREQ_1KHZ         = 1U,
+	uint32_t tick_freq, current_process_tick;
+	tick_freq = HAL_GetTickFreq();
+	if (tick_freq == HAL_TICK_FREQ_1KHZ)
 	{
-		mcu_process_time_handle->maxmimum_process_time = current_processing_time;
+		current_process_tick = current_processing_time;
 	}
-	if (current_processing_time < mcu_process_time_handle->minimum_process_time)
+	else if (tick_freq == HAL_TICK_FREQ_100HZ)
 	{
-		mcu_process_time_handle->minimum_process_time = current_processing_time;
+		current_process_tick = current_processing_time / 10;
 	}
+	else
+	{
+		current_process_tick = current_processing_time / 100;
+	}
+	mcu_process_time_handle->current_process_time = current_process_tick;
+
+	if (current_process_tick > mcu_process_time_handle->max_process_time)
+	{
+		mcu_process_time_handle->max_process_time = current_process_tick;
+	}
+	else
+	{
+	}
+	if (current_process_tick < mcu_process_time_handle->min_process_time)
+	{
+		mcu_process_time_handle->min_process_time = current_process_tick;
+	}
+	else
+	{
+	}
+	return;
 }
 
 void vPrintProcessingTime(MCUProcessingEvaluate_t *mcu_process_time_handle)
 {
-	PRINTF(" \
-            Current processing time: %ld\r\n\
-            Max processing time: %ld\r\n\
-            Min processing time: %ld\r\n",
-		   mcu_process_time_handle->current_process_time,
-		   mcu_process_time_handle->maxmimum_process_time,
-		   mcu_process_time_handle->minimum_process_time);
+	newline;
+	printf("Current processing time: %ldms\r\n", mcu_process_time_handle->current_process_time);
+	printf("Max processing time: %ldms\r\n", mcu_process_time_handle->max_process_time);
+	printf("Min processing time: %ldms\r\n", mcu_process_time_handle->min_process_time);
 }

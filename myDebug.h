@@ -24,10 +24,9 @@
 
 #define configHAL_UART
 #define USE_RETARGET_PRINTF
-//#define USE_DMA_TX
 //#define configLL_UART
 #define PRINT_DEBUG /* Enable print debug information */
-
+#define IWDG_TIME (5000lu)
 
 /* -------------------------------------------------------------------------- */
 /*                         TIME-PROCESSING-MANAGEMENT                         */
@@ -41,20 +40,19 @@ typedef struct TimeStamp{
 } TimeStamp_t;
 
 typedef struct MCUProcessingEvaluate{
-    uint32_t minimum_process_time;
-    uint32_t maxmimum_process_time;
+    uint32_t min_process_time;
+    uint32_t max_process_time;
     uint32_t current_process_time;
 } MCUProcessingEvaluate_t;
 
 #define __PRINT_TIME_STAMP()    (vTimeStamp(HAL_GetTick()))
-
 /**
  * @brief Evaluate MCU processing time every superloop elapsed
  * 
  * @param mcu_process_time_handle 
  * @param current_processing_time 
  */
-void vMCUProcessingEvaluate(MCUProcessingEvaluate_t* mcu_process_time_handle, uint32_t current_processing_time);
+void vMCUProcessTimeUpdate(MCUProcessingEvaluate_t* mcu_process_time_handle, uint32_t current_processing_time);
 
 void vPrintProcessingTime(MCUProcessingEvaluate_t *mcu_process_time_handle);
 
