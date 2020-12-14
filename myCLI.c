@@ -1,16 +1,15 @@
 #include "myCLI.h"
 #include "myMisc.h"
 #include "myDebug.h"
-#include "myF103.h"
+#include "myF767.h"
 
-#define COMMAND_INDEX (0U)
 /* Should be excluded if not used to prevent build errors */
 extern USART_StringReceive_t uart_receive_handle;
 extern MCUProcessingEvaluate_t mcu_process_time_handle;
 
-void vUART_Init(UART_HandleTypeDef *huart, USART_TypeDef *USARTx, USART_StringReceive_t *uart_receive_handle)
+void vUART_CLI_Init(UART_HandleTypeDef *huart, USART_StringReceive_t *uart_receive_handle)
 {
-    huart->Instance = USARTx; /* Select this parameter according to USART Instance configured in .ioc */
+    huart->Instance = USARTX; /* Select this parameter according to USART Instance configured in .ioc */
     huart->Init.BaudRate = 115200;
     huart->Init.WordLength = UART_WORDLENGTH_8B;
     huart->Init.StopBits = UART_STOPBITS_1;
@@ -30,7 +29,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     uint8_t i;
     /* Process USART2 Receive_Cplt_IT */
-    if (huart->Instance == USART2)
+    if (huart->Instance == USARTX)
     {
         /* Reset Receive Buffer whenever index_value = 0 */
         if (uart_receive_handle.rx_index == 0)
@@ -61,53 +60,55 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void vExecuteCLIcmd(USART_StringReceive_t *uart_receive_handle)
 {
 
-    // ""          /* 0 */
-    // "help",     /* 1 */
-    // "led1 on",  /* 2 */
-    // "led1 off", /* 3 */
-    // "led4 on",  /* 4 */
-    // "led4 off", /* 5 */
-    // "time",     /* 6 */
-    // "evaluate", /* 7 */
     char *input_string = (char *)&uart_receive_handle->rx_buffer;
+    /* Clear receive complete flag */
+    uart_receive_handle->rx_cplt_flag = 0;
     // PRINTF("Command string: \"%s\"\r\n", uart_receive_handle->rx_buffer);
-    printf("/* -------------------------------------------------------------------------- */\r\n");
-    printf("Your command: %s\r\n", input_string);
     if (IS_STRING(input_string, "help"))
     {
         printf("/* -------------------------------------------------------------------------- */\r\n");
         printf("/*                               CLI - HELP MENU                              */\r\n");
         printf("/*--------------------------------------------------------------------------- */\r\n");
-        printf("\"help\"            : Display help menu\r\n");
-        printf("\"led<x> <state>\"  : Control LED x in range 1 or 4, state either 1-on or 0-off\r\n");
-        printf("\"time\"            : Get MCU working time\r\n");
-        printf("\"process\"         : Evaluate superloop processing time\r\n");
-        printf("\"reboot\"          : Perform chip reset\r\n");
-        printf("\"clock\"           : MCU clock\r\n");
+        printf("\"help\"                 : Display help menu\r\n");
+        printf("\"<LED_color> <state>\"  : Control equivalent color LED on or off\r\n");
+        printf("\"time\"                 : Get MCU working time\r\n");
+        printf("\"process\"              : Evaluate superloop processing time\r\n");
+        printf("\"reboot\"               : Perform chip reset\r\n");
+        printf("\"clock\"                : MCU clock\r\n");
         printf("\r\n\r\n>>> ");
     }
     else if (IS_STRING(input_string, ""))
     {
         printf("\r\n\r\n>>> ");
     }
-    else if (IS_STRING(input_string, "led1 1"))
+    else if (IS_STRING(input_string, "red 1"))
     {
-        __MY_WRITE_LED(LED_1, ON);
+        WRITE_LED(LED_RED, ON);
         printf("\r\n\r\n>>> ");
     }
-    else if (IS_STRING(input_string, "led1 0"))
+    else if (IS_STRING(input_string, "red 0"))
     {
-        __MY_WRITE_LED(LED_1, OFF);
+        WRITE_LED(LED_RED, OFF);
         printf("\r\n\r\n>>> ");
     }
-    else if (IS_STRING(input_string, "led4 1"))
+    else if (IS_STRING(input_string, "blue 1"))
     {
-        __MY_WRITE_LED(LED_4, ON);
+        WRITE_LED(LED_BLUE, ON);
         printf("\r\n\r\n>>> ");
     }
-    else if (IS_STRING(input_string, "led4 0"))
+    else if (IS_STRING(input_string, "blue 0"))
     {
-        __MY_WRITE_LED(LED_4, OFF);
+        WRITE_LED(LED_BLUE, OFF);
+        printf("\r\n\r\n>>> ");
+    }
+    else if (IS_STRING(input_string, "green 1"))
+    {
+        WRITE_LED(LED_GREEN, ON);
+        printf("\r\n\r\n>>> ");
+    }
+    else if (IS_STRING(input_string, "green 0"))
+    {
+        WRITE_LED(LED_GREEN, OFF);
         printf("\r\n\r\n>>> ");
     }
     else if (IS_STRING(input_string, "time"))
@@ -124,7 +125,7 @@ void vExecuteCLIcmd(USART_StringReceive_t *uart_receive_handle)
     else if (IS_STRING(input_string, "clock"))
     {
         printf("RCC_HCLK Freq: %lu\r\n", HAL_RCC_GetHCLKFreq());
-        printf("Tick Freq: %d\r\n", 1000/HAL_GetTickFreq());
+        printf("Tick Freq: %d\r\n", 1000 / HAL_GetTickFreq());
         printf("\r\n\r\n>>> ");
     }
     else if (IS_STRING(input_string, "reboot"))
@@ -136,14 +137,13 @@ void vExecuteCLIcmd(USART_StringReceive_t *uart_receive_handle)
         printf("Unknown Command: \"%s\"\r\n", input_string);
         printf("\r\n\r\n>>> ");
     }
-    /* Clear receive complete flag */
-    uart_receive_handle->rx_cplt_flag = 0;
+
 }
 
 __weak void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     /* USER CODE BEGIN Callback 0 */
-    if (htim->Instance == TIM3)
+    if (htim->Instance == CLI_TIMER)
     {
         static uint32_t count;
         count++;
@@ -152,6 +152,7 @@ __weak void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             count = 0;
             if (uart_receive_handle.rx_cplt_flag == 1)
             {
+                __PRINT_TIME_STAMP();
                 vExecuteCLIcmd((USART_StringReceive_t *)&uart_receive_handle);
             }
         }

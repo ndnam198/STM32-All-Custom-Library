@@ -12,8 +12,6 @@
 #define __MY_UART_HANDLE_H /* __MY_UART_HANDLE_H */
 
 #include "main.h"
-#include "stdio.h"
-#include "string.h"
 
 #define USART_RX_BUFFER_SIZE (100u)
 
@@ -31,8 +29,7 @@ typedef struct USART_StringReceive {
  * @param USARTx 
  * @param uart_receive_handle 
  */
-void vUART_Init(UART_HandleTypeDef *huart, USART_TypeDef *USARTx,
-        USART_StringReceive_t *uart_receive_handle);
+void vUART_CLI_Init(UART_HandleTypeDef *huart, USART_StringReceive_t *uart_receive_handle);
 
 /**
  * @brief Re-define UART receive complete callback function

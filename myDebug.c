@@ -5,7 +5,8 @@ void vUARTSend(UART_HandleTypeDef huart, uint8_t *String)
 {
 	HAL_UART_Transmit(&huart, (uint8_t *)String, strlen((char *)String), 100);
 }
-#endif					   /* !configHAL_UART */
+#endif /* !configHAL_UART */
+
 #if defined(configLL_UART) /* configLL_UART */
 void vUARTSend(USART_TypeDef *USARTx, uint8_t *String)
 {
@@ -31,6 +32,15 @@ void vUARTSend(USART_TypeDef *USARTx, uint8_t *String)
 
 reset_cause_t resetCauseGet(void)
 {
+	/*
+		RCC_FLAG_BORRST: BOR reset flag
+		RCC_FLAG_PINRST: NRST pin reset flag
+		RCC_FLAG_PORRST: POR/PDR reset flag
+		RCC_FLAG_SFTRST: Software reset flag
+		RCC_FLAG_IWDGRST: Independent watchdog reset flag
+		RCC_FLAG_WWDGRST: Window watchdog reset flag
+		RCC_FLAG_LPWRRST: Low power reset flag 
+	*/
 	reset_cause_t reset_cause;
 
 	if (__HAL_RCC_GET_FLAG(RCC_FLAG_LPWRRST))
@@ -57,18 +67,17 @@ reset_cause_t resetCauseGet(void)
 	{
 		reset_cause = eRESET_CAUSE_EXTERNAL_RESET_PIN_RESET;
 	}
-	// Needs to come *after* checking the `RCC_FLAG_PORRST` flag in order to confirm that the reset cause is
-	// NOT a POR/PDR reset. See note below.
-	/* else if (__HAL_RCC_GET_FLAG(RCC_FLAG_BORRST))
-     {
-     reset_cause = eRESET_CAUSE_BROWNOUT_RESET;
-     } */
+#ifndef STM32_F1
+	else if (__HAL_RCC_GET_FLAG(RCC_FLAG_BORRST))
+	{
+		reset_cause = eRESET_CAUSE_BROWNOUT_RESET;
+	}
+#endif /* !STM32_F1 */
 	else
 	{
 		reset_cause = eRESET_CAUSE_UNKNOWN;
 	}
 
-	// Clear all the reset flags or else they will remain set during future resets until system power is fully removed.
 	__HAL_RCC_CLEAR_RESET_FLAGS();
 
 	return reset_cause;
@@ -110,14 +119,15 @@ const char *resetCauseGetName(reset_cause_t reset_cause)
 
 void vIWDG_Init(IWDG_HandleTypeDef *hiwdg, uint32_t millis)
 {
-	uint32_t iwdg_timeout_millis = millis;
 
 	/* Select INDEPENDENT_WATCHDOG */
 	hiwdg->Instance = IWDG;
 	/* Use prescaler LSI/128 */
-	hiwdg->Init.Prescaler = IWDG_PRESCALER_128;
-	hiwdg->Init.Reload = (int)(IWDG_RESOLUTION * ((float)iwdg_timeout_millis / PRESCALER_128_UPPER_LIMIT));
-
+	hiwdg->Init.Prescaler = IWDG_PRESCALER_32;
+	hiwdg->Init.Reload = millis;
+#ifndef STM32_F1
+	hiwdg->Init.Window = millis;
+#endif /* !STM32_F1 */
 	if (HAL_IWDG_Init(hiwdg) != HAL_OK)
 	{
 		_Error_Handler(__FILE__, __LINE__);
